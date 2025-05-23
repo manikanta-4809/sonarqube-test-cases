@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        SONARQUBE_SERVER = 'SonarQube' // name of SonarQube server configured in Jenkins
+    }
+
+    stages {
+        stage('List Files in Root') {
+            steps {
+                echo 'Listing files in the workspace root'
+                sh 'ls -l'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo 'Building Docker image'
+                sh 'docker build -t my-python-app .'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                echo 'Running tests inside Docker container'
+                sh 'docker run --rm my-python-app'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    echo 'Running SonarQube Scanner'
+                    sh 'docker run --rm -v $(pwd):/app -w /app my-python-app sonar-scanner'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+    }
+}
+
