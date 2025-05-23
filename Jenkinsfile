@@ -1,32 +1,30 @@
 pipeline {
-    agent any
-
-
-    environment {
-        DOCKER_REGISTRY = 'saipolaki'  // Replace with your Docker Hub username
-        IMAGE_NAME = 'my-python-text'
-        DEV_EC2_HOST = '3.110.218.88'        // Replace with your dev instance IP
-        PROD_EC2_HOST = 'your-prod-instance-ip'      // Replace with your prod instance IP
+    agent {
+        docker {
+            image 'python:3.10-slim-buster'
+            args '-u root:root'
+        }
     }
-    
+
     stages {
-        stage('📥 Checkout') {
+        stage('Checkout') {
             steps {
-                echo 'Checking out source code...'
                 checkout scm
             }
         }
-        
-        stage('🔧 Setup Environment') {
-    steps {
-        echo 'Setting up Python environment without virtualenv...'
-        sh '''
-            pip install --upgrade pip
-            pip install -r app/requirements.txt
-            pip install pytest coverage pylint flake8
-        '''
-    }
-}
+
+        stage('Setup Environment') {
+            steps {
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r app/requirements.txt
+                    pip install pytest coverage pylint flake8
+                '''
+            }
+        }
+
 
         
         stage('📊 Code Quality - Linting') {
