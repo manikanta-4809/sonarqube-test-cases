@@ -1,11 +1,10 @@
 pipeline {
-    agent any
+    agent {
+    docker {
+        image 'python:3.11'
+    }
+}
 
-    // Parameters will be added via Jenkins UI "This project is parameterized"
-    // Add these parameters in Jenkins UI:
-    // 1. Choice Parameter: name='ENVIRONMENT', choices='dev\nprod', description='Select deployment environment'
-    // 2. Boolean Parameter: name='SKIP_TESTS', default=false, description='Skip running tests'
-    
     environment {
         DOCKER_REGISTRY = 'saipolaki'  // Replace with your Docker Hub username
         IMAGE_NAME = 'my-python-text'
