@@ -1,6 +1,6 @@
 pipeline {
-    agent {
-}
+    agent any
+
 
     environment {
         DOCKER_REGISTRY = 'saipolaki'  // Replace with your Docker Hub username
@@ -18,17 +18,16 @@ pipeline {
         }
         
         stage('🔧 Setup Environment') {
-            steps {
-                echo 'Setting up Python environment...'
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    python3 -m pip install --upgrade pip
-                    pip install -r app/requirements.txt
-                    pip install pytest coverage pylint flake8
-                '''
-            }
-        }
+    steps {
+        echo 'Setting up Python environment without virtualenv...'
+        sh '''
+            pip install --upgrade pip
+            pip install -r app/requirements.txt
+            pip install pytest coverage pylint flake8
+        '''
+    }
+}
+
         
         stage('📊 Code Quality - Linting') {
             steps {
