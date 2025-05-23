@@ -1,31 +1,38 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10-slim-buster'
-            args '-u root:root'
-        }
-    }
+    agent any
 
+    // Parameters will be added via Jenkins UI "This project is parameterized"
+    // Add these parameters in Jenkins UI:
+    // 1. Choice Parameter: name='ENVIRONMENT', choices='dev\nprod', description='Select deployment environment'
+    // 2. Boolean Parameter: name='SKIP_TESTS', default=false, description='Skip running tests'
+    
+    environment {
+        DOCKER_REGISTRY = 'saipolaki'  // Replace with your Docker Hub username
+        IMAGE_NAME = 'my-python-text'
+        DEV_EC2_HOST = '3.110.218.88'        // Replace with your dev instance IP
+        PROD_EC2_HOST = 'your-prod-instance-ip'      // Replace with your prod instance IP
+    }
+    
     stages {
-        stage('Checkout') {
+        stage('📥 Checkout') {
             steps {
+                echo 'Checking out source code...'
                 checkout scm
             }
         }
-
-        stage('Setup Environment') {
+        
+        stage('🔧 Setup Environment') {
             steps {
+                echo 'Setting up Python environment...'
                 sh '''
                     python3 -m venv venv
                     . venv/bin/activate
-                    pip install --upgrade pip
+                    python3 -m pip install --upgrade pip
                     pip install -r app/requirements.txt
                     pip install pytest coverage pylint flake8
                 '''
             }
         }
-
-
         
         stage('📊 Code Quality - Linting') {
             steps {
