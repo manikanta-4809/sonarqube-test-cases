@@ -1,8 +1,5 @@
 pipeline {
     agent {
-    docker {
-        image 'python:3.11'
-    }
 }
 
     environment {
