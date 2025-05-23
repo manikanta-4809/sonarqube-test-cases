@@ -2,36 +2,65 @@ pipeline {
     agent any
 
     environment {
-        SONARQUBE_SERVER = 'SonarQube' // name of SonarQube server configured in Jenkins
+        SONARQUBE_SERVER = 'sonarqube-python' // replace with your actual SonarQube config name
     }
 
     stages {
         stage('List Files in Root') {
             steps {
-                echo 'Listing files in the workspace root'
+                echo 'Listing files in root workspace'
                 sh 'ls -l'
+            }
+        }
+
+        stage('List Files in python-demo-sonarqube') {
+            steps {
+                dir('python-demo-sonarqube') {
+                    echo 'Listing files in python-demo-sonarqube directory'
+                    sh 'ls -l'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image'
-                sh 'docker build -t my-python-app .'
+                dir('python-demo-sonarqube') {
+                    echo 'Building Docker image'
+                    sh 'docker build -t python-demo-sonarqube .'
+                }
             }
         }
 
         stage('Run Tests') {
             steps {
-                echo 'Running tests inside Docker container'
-                sh 'docker run --rm my-python-app'
+                dir('python-demo-sonarqube') {
+                    echo 'Running tests inside Docker container'
+                    script {
+                        try {
+                            sh 'docker run --rm python-demo-sonarqube'
+                        } catch (err) {
+                            echo "Tests failed: ${err}"
+                            error "Failing pipeline because tests failed"
+                        }
+                    }
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
-                    echo 'Running SonarQube Scanner'
-                    sh 'docker run --rm -v $(pwd):/app -w /app my-python-app sonar-scanner'
+                dir('python-demo-sonarqube') {
+                    withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                        echo 'Running SonarQube scanner'
+                        script {
+                            try {
+                                sh 'sonar-scanner'
+                            } catch (err) {
+                                echo "SonarQube analysis failed: ${err}"
+                                error "Failing pipeline because SonarQube analysis failed"
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -43,4 +72,3 @@ pipeline {
         }
     }
 }
-
